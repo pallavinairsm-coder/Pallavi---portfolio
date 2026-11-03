@@ -1,0 +1,14 @@
+const DEFAULT = window.PORTFOLIO_CONTENT;
+function getContent(){try {const draft=localStorage.getItem('pallaviPortfolioDraft');return draft?JSON.parse(draft):DEFAULT;}catch{return DEFAULT;}}
+const data=getContent();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const grid=document.querySelector('#project-grid');
+if(grid) grid.innerHTML=data.projects.map((p,i)=>`<button class="project-card" data-project="${esc(p.id)}"><div class="project-art">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.title)} screenshot">`:`<span>${esc(p.number||String(i+1).padStart(2,'0'))} / ${esc(p.category)}</span><strong>${esc(p.title.slice(0,2).toUpperCase())}</strong>`}</div><div class="project-meta"><span>${esc(p.category)}</span><span>↗</span></div><h3>${esc(p.title)}</h3><p class="project-subtitle">${esc(p.subtitle)}</p><p>${esc(p.summary)}</p><div class="tags">${(p.tools||[]).slice(0,4).map(t=>`<span>${esc(t)}</span>`).join('')}</div><span class="read-more">View case study →</span></button>`).join('');
+const experience=document.querySelector('#experience-list');if(experience)experience.innerHTML=data.experience.map(e=>`<article class="timeline-row"><span>${esc(e.period)}</span><div><h3>${esc(e.role)}</h3><p>${esc(e.company)} · ${esc(e.detail)}</p></div><span>↗</span></article>`).join('');
+const cert=document.querySelector('#certifications');if(cert)cert.innerHTML=data.certifications.map(c=>`<span>${esc(c)}</span>`).join('');
+const email=document.querySelector('#email-link');if(email)email.href='mailto:'+encodeURIComponent(data.email);
+const linkedin=document.querySelector('#linkedin-link');if(linkedin)linkedin.href=data.linkedin;
+document.querySelector('#year').textContent=new Date().getFullYear();
+const modal=document.querySelector('#project-modal');
+grid?.addEventListener('click',e=>{const card=e.target.closest('[data-project]');if(!card)return;const p=data.projects.find(x=>x.id===card.dataset.project);if(!p)return;document.querySelector('#project-detail').innerHTML=`<span class="kicker">${esc(p.category)}</span><h2>${esc(p.title)}</h2><h3>${esc(p.subtitle)}</h3>${p.image?`<img class="detail-image" src="${esc(p.image)}" alt="Project screenshot">`:''}<p class="detail-summary">${esc(p.summary)}</p><h4>The challenge</h4><p>${esc(p.challenge)}</p><h4>My approach</h4><p>${esc(p.approach)}</p><h4>Outcome</h4><p>${esc(p.outcome)}</p><div class="tags">${(p.tools||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>${p.link?`<p><a class="button secondary" href="${esc(p.link)}" target="_blank" rel="noopener noreferrer">View project ↗</a></p>`:''}`;modal.showModal();});
+document.querySelector('#close-modal')?.addEventListener('click',()=>modal.close());modal?.addEventListener('click',e=>{if(e.target===modal)modal.close();});
