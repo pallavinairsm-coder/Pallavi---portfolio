@@ -1,11 +1,35 @@
 const original=window.PORTFOLIO_CONTENT;let draft;try{draft=JSON.parse(localStorage.getItem('pallaviPortfolioDraft'))||structuredClone(original)}catch{draft=structuredClone(original)}
 const $=s=>document.querySelector(s);const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 $('#email').value=draft.email;$('#linkedin').value=draft.linkedin;$('#certifications-field').value=draft.certifications.join('\n');
-const fields=[['title','Project title'],['subtitle','Subtitle'],['category','Category'],['summary','Short summary'],['challenge','Challenge'],['approach','Approach'],['outcome','Outcome'],['tools','Tools (comma separated)'],['image','Screenshot path (e.g. images/orbit.png)'],['link','Project link (optional)']];let selected=0;
+const fields=[['title','Project title'],['subtitle','Subtitle'],['category','Category'],['summary','Short summary'],['challenge','Challenge'],['approach','Approach'],['outcome','Outcome'],['tools','Tools (comma separated)'],['image','Screenshots — one image path per line (e.g. images/orbit-overview.png)'],['link','Project link (optional)']];let selected=0;
 function syncProject(){const p=draft.projects[selected];if(!p)return;document.querySelectorAll('#project-fields [data-field]').forEach(el=>{p[el.dataset.field]=el.dataset.field==='tools'?el.value.split(',').map(x=>x.trim()).filter(Boolean):el.value;});}
-function renderProject(){const select=$('#project-picker');select.innerHTML=draft.projects.map((p,i)=>`<option value="${i}">${escapeHTML(p.title)}</option>`).join('');select.value=String(selected);const p=draft.projects[selected];$('#project-fields').innerHTML=p?fields.map(([key,label])=>`<label for="f-${key}">${label}</label>${['summary','challenge','approach','outcome'].includes(key)?`<textarea id="f-${key}" data-field="${key}">${escapeHTML(p[key])}</textarea>`:`<input id="f-${key}" data-field="${key}" value="${escapeHTML(key==='tools'?p.tools.join(', '):p[key])}">`}`).join(''):'<p>No projects. Add one to begin.</p>';}
+function renderProject(){
+ const select=$('#project-picker');
+ select.innerHTML=draft.projects.map((p,i)=>`<option value="${i}">${escapeHTML(p.title)}</option>`).join('');
+ select.value=String(selected);
+ const p=draft.projects[selected];
+ if(!p){$('#project-fields').innerHTML='<p>No projects. Add one to begin.</p>';return;}
+ let html='';
+ for(const [key,label] of fields){
+  html+=`<label for="f-${key}">${label}</label>`;
+  const value=key==='tools'?(p.tools||[]).join(', '):String(p[key]||'');
+  if(['summary','challenge','approach','outcome','image'].includes(key)){
+   html+=`<textarea id="f-${key}" data-field="${key}" ${key==='image'?'rows="7"':''}>${escapeHTML(value)}</textarea>`;
+  }else{
+   html+=`<input id="f-${key}" data-field="${key}" value="${escapeHTML(value)}">`;
+  }
+ }
+ $('#project-fields').innerHTML=html;
+}
 $('#project-picker').addEventListener('change',e=>{syncProject();selected=Number(e.target.value);renderProject()});$('#add-project').addEventListener('click',()=>{syncProject();draft.projects.push({id:'project-'+Date.now(),number:String(draft.projects.length+1).padStart(2,'0'),title:'New Project',subtitle:'',category:'PORTFOLIO',summary:'',challenge:'',approach:'',outcome:'',tools:[],image:'',link:''});selected=draft.projects.length-1;renderProject()});$('#remove-project').addEventListener('click',()=>{if(!confirm('Remove this project from your draft?'))return;draft.projects.splice(selected,1);selected=Math.max(0,Math.min(selected,draft.projects.length-1));renderProject()});renderProject();
-function renderExperience(){const el=$('#experience-fields');el.innerHTML=draft.experience.map((e,i)=>`<div class="panel" data-exp="${i}"><label>Role</label><input data-key="role" value="${escapeHTML(e.role)}"><label>Company</label><input data-key="company" value="${escapeHTML(e.company)}"><label>Period</label><input data-key="period" value="${escapeHTML(e.period)}"><label>Details</label><textarea data-key="detail">${escapeHTML(e.detail)}</textarea><button class="outline" data-remove="${i}">Remove role</button></div>`).join('');el.querySelectorAll('[data-key]').forEach(inp=>inp.addEventListener('input',()=>{draft.experience[Number(inp.closest('[data-exp]').dataset.exp)][inp.dataset.key]=inp.value}));el.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{draft.experience.splice(Number(btn.dataset.remove),1);renderExperience()}));}renderExperience();$('#add-experience').addEventListener('click',()=>{draft.experience.push({role:'New role',company:'',period:'',detail:''});renderExperience()});
+function renderExperience(){
+ const el=$('#experience-fields');
+ el.innerHTML=draft.experience.map((e,i)=>`<div class="panel" data-exp="${i}"><label>Role</label><input data-key="role" value="${escapeHTML(e.role)}"><label>Company</label><input data-key="company" value="${escapeHTML(e.company)}"><label>Period</label><input data-key="period" value="${escapeHTML(e.period)}"><label>Details</label><textarea data-key="detail">${escapeHTML(e.detail)}</textarea><button class="outline" data-remove="${i}">Remove role</button></div>`).join('');
+ el.querySelectorAll('[data-key]').forEach(inp=>inp.addEventListener('input',()=>{draft.experience[Number(inp.closest('[data-exp]').dataset.exp)][inp.dataset.key]=inp.value}));
+ el.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{draft.experience.splice(Number(btn.dataset.remove),1);renderExperience()}));
+}
+renderExperience();
+$('#add-experience').addEventListener('click',()=>{draft.experience.push({role:'New role',company:'',period:'',detail:''});renderExperience()});
 function collect(){syncProject();draft.email=$('#email').value;draft.linkedin=$('#linkedin').value;draft.certifications=$('#certifications-field').value.split('\n').map(x=>x.trim()).filter(Boolean);}
 $('#save').addEventListener('click',()=>{collect();localStorage.setItem('pallaviPortfolioDraft',JSON.stringify(draft));$('#status').textContent='Saved in this browser. Open the website to preview. Not published to GitHub.'});
 $('#download').addEventListener('click',()=>{collect();const text='/* Portfolio content — exported from the visual editor */\nwindow.PORTFOLIO_CONTENT = '+JSON.stringify(draft,null,2)+';\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/javascript'}));a.download='content.js';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);$('#status').textContent='Downloaded content.js. Upload it to GitHub to publish.'});
