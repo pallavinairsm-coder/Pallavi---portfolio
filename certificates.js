@@ -2,8 +2,10 @@
 /*
   PALLAVI NAIR SM — INTERACTIVE CERTIFICATE GALLERY
   Complete replacement for certificates.js
-  Works with the existing index.html, style.css,
-  certificates.css, content.js and script.js.
+
+  Compatible with:
+  index.html, style.css, certificates.css,
+  content.js and script.js.
 */
 
 (() => {
@@ -12,7 +14,7 @@
   const target = document.getElementById('certifications');
   if (!target) return;
 
-  // Safely display text inside HTML.
+  // Escape text safely before inserting into HTML.
   const esc = value =>
     String(value ?? '').replace(/[&<>"']/g, char => ({
       '&': '&amp;',
@@ -22,19 +24,80 @@
       "'": '&#39;'
     }[char]));
 
-  // Read existing portfolio certifications.
-  function getCertifications() {
+  // Certificate details and image filenames.
+  // All images belong inside the images/ folder.
+  const certificates = [
+    {
+      name: 'Top Graduate Award',
+      issuer: 'University of Wollongong in Dubai',
+      image: 'images/top-graduate-award.jpg',
+      featured: true,
+      keywords: ['top graduate']
+    },
+    {
+      name: 'Microsoft Certified: Power BI Data Analyst Associate (PL-300)',
+      issuer: 'Microsoft',
+      image: 'images/pl300.png',
+      keywords: ['pl-300', 'power bi data analyst']
+    },
+    {
+      name: 'IBM – Data Science 101',
+      issuer: 'IBM / Cognitive Class',
+      image: 'images/ibm.png',
+      keywords: ['data science 101']
+    },
+    {
+      name: 'Anthropic – AI Fluency: Framework & Foundations',
+      issuer: 'Anthropic',
+      image: 'images/anthropic.png',
+      keywords: ['ai fluency']
+    },
+    {
+      name: 'McKinsey Forward Program',
+      issuer: 'McKinsey.org',
+      image: 'images/mckinsey.png',
+      keywords: ['mckinsey']
+    },
+    {
+      name: 'Deloitte Australia – Data Analytics Job Simulation',
+      issuer: 'Deloitte / Forage',
+      image: 'images/deloitte.png',
+      keywords: ['deloitte']
+    },
+    {
+      name: 'Microsoft Azure AI Essentials',
+      issuer: 'LinkedIn Learning',
+      image: 'images/azure-ai.png',
+      keywords: ['azure ai', 'azure essentials']
+    },
+    {
+      name: 'Sirocco Group – Marketing Automation Certificate',
+      issuer: 'Sirocco Group',
+      image: 'images/sirocco.png',
+      keywords: ['sirocco', 'marketing automation']
+    },
+    {
+      name: 'Udemy – SAP S/4HANA',
+      issuer: 'Udemy',
+      image: 'images/sap.png',
+      keywords: ['sap s/4hana', 'sap s4', 's/4hana']
+    }
+  ];
+
+  // Load any additional certificates saved in the portfolio.
+  function getSavedCertifications() {
     try {
       const saved = localStorage.getItem('pallaviPortfolioDraft');
 
       if (saved) {
         const parsed = JSON.parse(saved);
+
         if (Array.isArray(parsed.certifications)) {
           return parsed.certifications;
         }
       }
     } catch (error) {
-      console.warn('Could not load local certifications.', error);
+      console.warn('Unable to read saved certifications.', error);
     }
 
     return Array.isArray(window.PORTFOLIO_CONTENT?.certifications)
@@ -42,80 +105,54 @@
       : [];
   }
 
-  const raw = getCertifications();
+  const raw = getSavedCertifications();
 
-  // Image filenames must match the GitHub images folder.
-  const certificateImages = {
-    pl300: 'images/pl300.png',
-    ibm: 'images/ibm.png',
-    anthropic: 'images/anthropic.png',
-    topGraduate: 'images/top-graduate-award.jpg'
-  };
+  // Start with the nine certificates listed above.
+  const entries = certificates.map(cert => ({
+    name: cert.name,
+    issuer: cert.issuer,
+    image: cert.image,
+    featured: Boolean(cert.featured),
+    keywords: cert.keywords
+  }));
 
-  // Identify the certificates that already have images.
-  function getImageForCertificate(name) {
-    const text = String(name || '').toLowerCase();
+  // Add other certifications without creating duplicates.
+  raw.forEach(item => {
+    const name = typeof item === 'string'
+      ? item
+      : item?.title || item?.name || '';
 
-    if (
-      text.includes('pl-300') ||
-      text.includes('power bi data analyst')
-    ) {
-      return certificateImages.pl300;
-    }
+    if (!name) return;
 
-    if (text.includes('data science 101')) {
-      return certificateImages.ibm;
-    }
+    const normalizedName = name.toLowerCase();
 
-    if (text.includes('ai fluency')) {
-      return certificateImages.anthropic;
-    }
+    const alreadyExists = entries.some(entry => {
+      const sameName =
+        entry.name.toLowerCase() === normalizedName;
 
-    if (text.includes('top graduate')) {
-      return certificateImages.topGraduate;
-    }
+      const keywordMatch = entry.keywords.some(keyword =>
+        normalizedName.includes(keyword)
+      );
 
-    return '';
-  }
+      return sameName || keywordMatch;
+    });
 
-  // Convert saved certifications into gallery entries.
-  const entries = [
-    {
-      name: 'Top Graduate Award',
-      issuer: 'University of Wollongong in Dubai',
-      image: certificateImages.topGraduate,
-      featured: true
-    },
+    if (alreadyExists) return;
 
-    ...raw
-      .map(item => {
-        if (typeof item === 'string') {
-          return {
-            name: item,
-            issuer: 'Professional learning',
-            image: getImageForCertificate(item),
-            featured: false
-          };
-        }
+    entries.push({
+      name: name,
+      issuer: typeof item === 'string'
+        ? 'Professional learning'
+        : item?.issuer || 'Professional learning',
+      image: typeof item === 'string'
+        ? ''
+        : item?.image || item?.certificate || '',
+      featured: false,
+      keywords: []
+    });
+  });
 
-        const name = item?.title || item?.name || 'Certification';
-
-        return {
-          name: name,
-          issuer: item?.issuer || 'Professional learning',
-          image:
-            item?.image ||
-            item?.certificate ||
-            getImageForCertificate(name),
-          featured: false
-        };
-      })
-      .filter(entry =>
-        !entry.name.toLowerCase().includes('top graduate')
-      )
-  ];
-
-  // Make the certification gallery.
+  // Build the certificate gallery.
   target.classList.remove('chips');
   target.classList.add('certificate-gallery-grid');
 
@@ -136,6 +173,7 @@
       <span class="certificate-gallery-copy">
         <strong>${esc(entry.name)}</strong>
         <small>${esc(entry.issuer)}</small>
+
         <span class="certificate-gallery-action">
           View certificate ↗
         </span>
@@ -143,7 +181,7 @@
     </button>
   `).join('');
 
-  // Create the certificate popup.
+  // Create the certificate preview popup.
   const dialog = document.createElement('dialog');
 
   dialog.className = 'certificate-preview-dialog';
@@ -151,9 +189,9 @@
 
   document.body.appendChild(dialog);
 
-  // Open the selected certificate.
+  // Display a certificate inside the popup.
   function showCertificate(entry) {
-    let preview;
+    let preview = '';
 
     if (entry.image) {
       preview = `
@@ -172,7 +210,9 @@
       preview = `
         <div class="certificate-preview-empty">
           <span>✦</span>
+
           <p>Certificate preview coming soon</p>
+
           <small>
             This certificate will be available for viewing soon.
           </small>
@@ -209,29 +249,37 @@
       </p>
     `;
 
-    // Close button.
-    dialog
-      .querySelector('.certificate-preview-close')
-      .addEventListener('click', () => dialog.close());
+    // Close popup button.
+    const closeButton = dialog.querySelector(
+      '.certificate-preview-close'
+    );
 
-    // Handle missing certificate images.
+    closeButton.addEventListener('click', () => {
+      dialog.close();
+    });
+
+    // Handle certificate image errors.
     const image = dialog.querySelector(
       '.certificate-preview-body img'
     );
 
     if (image) {
       image.addEventListener('error', () => {
-        image.hidden = true;
+        image.style.display = 'none';
 
         const message = image.nextElementSibling;
-        if (message) message.hidden = false;
+
+        if (message) {
+          message.hidden = false;
+        }
       });
 
-      // Discourage ordinary right-click saving.
+      // Disable normal right-click image menu.
       image.addEventListener('contextmenu', event => {
         event.preventDefault();
       });
 
+      // Disable normal image dragging.
       image.addEventListener('dragstart', event => {
         event.preventDefault();
       });
@@ -240,25 +288,28 @@
     dialog.showModal();
   }
 
-  // Open the correct certificate when a card is clicked.
+  // Open the selected certificate.
   target.addEventListener('click', event => {
     const button = event.target.closest('[data-cert-index]');
+
     if (!button) return;
 
     const index = Number(button.dataset.certIndex);
     const entry = entries[index];
 
-    if (entry) showCertificate(entry);
+    if (entry) {
+      showCertificate(entry);
+    }
   });
 
-  // Close popup when clicking outside its content.
+  // Close popup when clicking outside its contents.
   dialog.addEventListener('click', event => {
     if (event.target === dialog) {
       dialog.close();
     }
   });
 
-  // Make the two featured achievement cards clickable.
+  // Make existing featured achievement cards clickable.
   const featuredCards = document.querySelectorAll(
     '.achievement-grid .award'
   );
@@ -269,8 +320,7 @@
           entry.name.toLowerCase().includes('top graduate')
         )
       : entries.find(entry =>
-          entry.name.toLowerCase().includes('pl-300') ||
-          entry.name.toLowerCase().includes('power bi data analyst')
+          entry.name.toLowerCase().includes('pl-300')
         );
 
     if (!match) return;
@@ -278,6 +328,7 @@
     card.style.cursor = 'pointer';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+
     card.setAttribute(
       'aria-label',
       `View ${match.name} certificate`
