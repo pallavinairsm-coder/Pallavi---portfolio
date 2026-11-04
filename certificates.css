@@ -1,0 +1,21 @@
+/* Certificate gallery – compatible with existing dark portfolio */
+.certificate-gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:22px}
+.certificate-gallery-card{display:flex;align-items:flex-start;gap:15px;text-align:left;padding:23px 20px;min-height:166px;background:linear-gradient(145deg,#132b49,#0d1f37);border:1px solid #294767;border-radius:17px;color:#f0f6ff;cursor:pointer;font:inherit;transition:transform .2s,border-color .2s,box-shadow .2s}
+.certificate-gallery-card:hover,.certificate-gallery-card:focus-visible{transform:translateY(-3px);border-color:#67b9ef;box-shadow:0 12px 30px #0004;outline:none}
+.certificate-gallery-symbol{flex:0 0 38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#1c4063;color:#6bdbed;font-size:23px}
+.certificate-gallery-copy{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;height:100%}
+.certificate-gallery-copy strong{font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.certificate-gallery-copy small{color:#a5c0dc;font-size:12px;line-height:1.4}
+.certificate-gallery-action{margin-top:auto;color:#68d7eb;font-size:12px;font-weight:700}
+.certificate-preview-dialog{width:min(920px,calc(100% - 26px));max-height:92vh;padding:0;background:#0b1a2f;color:#fff;border:1px solid #355474;border-radius:18px;box-shadow:0 25px 90px #0009;overflow:auto}
+.certificate-preview-dialog::backdrop{background:rgba(0,7,18,.87);backdrop-filter:blur(6px)}
+.certificate-preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:24px 26px;border-bottom:1px solid #2c4664}
+.certificate-preview-head h2{font-size:clamp(20px,3vw,30px);margin:7px 0}.certificate-preview-head p{color:#abc4de;margin:0;font-size:14px}
+.certificate-preview-kicker{color:#6bd8e9;font-size:11px;letter-spacing:.14em;font-weight:700}
+.certificate-preview-close{background:#203c5b;border:1px solid #527391;color:white;font-size:26px;border-radius:9px;width:42px;height:42px;cursor:pointer;flex-shrink:0}
+.certificate-preview-body{padding:22px;display:flex;justify-content:center;align-items:center;min-height:240px}
+.certificate-preview-body img{display:block;max-width:100%;max-height:65vh;object-fit:contain;border-radius:7px;user-select:none;-webkit-user-drag:none}
+.certificate-preview-empty{text-align:center;padding:48px 12px;color:#c3d5e8}.certificate-preview-empty span{font-size:36px;color:#69d9ea}.certificate-preview-empty p{font-size:20px;font-weight:700}.certificate-preview-empty small{color:#9bb6d0}
+.certificate-preview-note{text-align:center;color:#89a9c8;font-size:11px;padding:0 20px 16px;margin:0}
+@media(max-width:900px){.certificate-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.certificate-gallery-grid{grid-template-columns:1fr}.certificate-gallery-card{min-height:120px}.certificate-preview-head{padding:18px}.certificate-preview-body{padding:12px}}
