@@ -30,7 +30,7 @@
     {
       name: 'Top Graduate Award',
       issuer: 'University of Wollongong in Dubai',
-      image: 'images/top-graduate-award.jpg',
+      image: 'images/top-graduate-certificate.png',
       featured: true,
       keywords: ['top graduate']
     },
