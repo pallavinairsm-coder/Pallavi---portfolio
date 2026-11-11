@@ -2,7 +2,16 @@ const DEFAULT = window.PORTFOLIO_CONTENT;
 function getContent() {
   try {
     const saved = localStorage.getItem('pallaviPortfolioDraft');
-    return saved ? JSON.parse(saved) : DEFAULT;
+    if (!saved) return DEFAULT;
+    const draft = JSON.parse(saved);
+    // Older saved drafts predate the Skills & Languages section.
+    // Keep the user's existing edits while filling missing sections from published content.
+    return {
+      ...DEFAULT,
+      ...draft,
+      skills: Array.isArray(draft.skills) && draft.skills.length ? draft.skills : (DEFAULT.skills || []),
+      languages: Array.isArray(draft.languages) && draft.languages.length ? draft.languages : (DEFAULT.languages || [])
+    };
   } catch { return DEFAULT; }
 }
 const data = getContent();
