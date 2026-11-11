@@ -22,6 +22,16 @@ if (grid) grid.innerHTML = (data.projects || []).map((project, index) => {
     <span class="read-more">View case study →</span>
   </button>`;
 }).join('');
+
+// Skills and languages are loaded from content.js and editable in Content Studio.
+const skillGrid = document.querySelector('#skills-grid');
+if (skillGrid) skillGrid.innerHTML = (data.skills || []).map((group, index) => `
+  <article class="skill-card"><div class="skill-card-top"><span class="skill-card-number">${String(index+1).padStart(2,'0')}</span><h3>${esc(group.title)}</h3></div>
+  <div class="skill-tags">${(group.items || []).map(item => `<span>${esc(item)}</span>`).join('')}</div></article>`).join('');
+const languageGrid = document.querySelector('#languages-grid');
+if (languageGrid) languageGrid.innerHTML = (data.languages || []).map((lang, index) => `
+  <article class="language-card"><span class="language-index">${String(index+1).padStart(2,'0')}</span><div><h4>${esc(lang.name)}</h4><p>${esc(lang.level)}</p></div></article>`).join('');
+
 const experience = document.querySelector('#experience-list');
 if (experience) experience.innerHTML = (data.experience || []).map(item => `<article class="timeline-row"><span>${esc(item.period)}</span><div><h3>${esc(item.role)}</h3><p>${esc(item.company)} · ${esc(item.detail)}</p></div><span>↗</span></article>`).join('');
 const certifications = document.querySelector('#certifications');

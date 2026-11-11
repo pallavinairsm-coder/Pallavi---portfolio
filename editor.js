@@ -12,6 +12,9 @@ const projectDefaults = { id:'', number:'', title:'', subtitle:'', category:'', 
 draft.projects = (draft.projects || []).map(project => ({...projectDefaults, ...project, tools: Array.isArray(project.tools) ? project.tools : []}));
 draft.experience ||= [];
 draft.certifications ||= [];
+// Use the latest published skills/languages when older browser drafts do not have them.
+draft.skills = Array.isArray(draft.skills) ? draft.skills : clone(original.skills || []);
+draft.languages = Array.isArray(draft.languages) ? draft.languages : clone(original.languages || []);
 $('#email').value = draft.email || '';
 $('#linkedin').value = draft.linkedin || '';
 $('#certifications-field').value = draft.certifications.join('\n');
@@ -93,6 +96,24 @@ $('#add-experience').addEventListener('click', () => {
   draft.experience.push({role:'New role', company:'', period:'', detail:''});
   renderExperience();
 });
+
+function renderSkillsEditor() {
+ const container = $('#skills-fields');
+ container.innerHTML = draft.skills.map((group,i) => `<div class="panel" data-skill-index="${i}"><label>Category title</label><input data-skill-title value="${escapeHTML(group.title)}"><label>Skills — one per line</label><textarea data-skill-items rows="6">${escapeHTML((group.items||[]).join('\n'))}</textarea><button class="outline" data-remove-skill="${i}">Remove category</button></div>`).join('');
+ container.querySelectorAll('[data-skill-title]').forEach(el=>el.addEventListener('input',()=>{draft.skills[Number(el.closest('[data-skill-index]').dataset.skillIndex)].title=el.value;}));
+ container.querySelectorAll('[data-skill-items]').forEach(el=>el.addEventListener('input',()=>{draft.skills[Number(el.closest('[data-skill-index]').dataset.skillIndex)].items=el.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);}));
+ container.querySelectorAll('[data-remove-skill]').forEach(el=>el.addEventListener('click',()=>{draft.skills.splice(Number(el.dataset.removeSkill),1);renderSkillsEditor();}));
+}
+function renderLanguagesEditor() {
+ const container = $('#language-fields');
+ container.innerHTML = draft.languages.map((lang,i)=>`<div class="panel" data-lang-index="${i}"><div class="two"><div><label>Language</label><input data-lang-name value="${escapeHTML(lang.name)}"></div><div><label>Level / description</label><input data-lang-level value="${escapeHTML(lang.level)}"></div></div><button class="outline" data-remove-lang="${i}">Remove language</button></div>`).join('');
+ container.querySelectorAll('[data-lang-name],[data-lang-level]').forEach(el=>el.addEventListener('input',()=>{const item=draft.languages[Number(el.closest('[data-lang-index]').dataset.langIndex)];item[el.hasAttribute('data-lang-name')?'name':'level']=el.value;}));
+ container.querySelectorAll('[data-remove-lang]').forEach(el=>el.addEventListener('click',()=>{draft.languages.splice(Number(el.dataset.removeLang),1);renderLanguagesEditor();}));
+}
+renderSkillsEditor();renderLanguagesEditor();
+$('#add-skill-category').addEventListener('click',()=>{draft.skills.push({title:'New category',items:[]});renderSkillsEditor();});
+$('#add-language').addEventListener('click',()=>{draft.languages.push({name:'New language',level:''});renderLanguagesEditor();});
+
 function collect() {
   syncProject();
   draft.email = $('#email').value;
